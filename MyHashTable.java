@@ -1,32 +1,33 @@
-import java.util.LinkedList;
-
 public class MyHashTable<K, V> {
 
-    private static class HashNode<K, V> {
-        K key;
-        V value;
+    private class HashNode<K, V> {
+        private K key;
+        private V value;
+        private HashNode<K, V> next;
 
-        HashNode(K key, V value) {
+        public HashNode(K key, V value) {
             this.key = key;
             this.value = value;
         }
+
+        @Override
+        public String toString() {
+            return "{" + key + " " + value + "}";
+        }
     }
 
-    private LinkedList<HashNode<K, V>>[] chainArray;
-    private int M;
+    private HashNode<K, V>[] chainArray;
+    private int M = 11;
     private int size;
 
     public MyHashTable() {
-        this(11);
+        chainArray = new HashNode[M];
+        size = 0;
     }
 
-    @SuppressWarnings("unchecked")
     public MyHashTable(int M) {
         this.M = M;
-        chainArray = new LinkedList[M];
-        for (int i = 0; i < M; i++) {
-            chainArray[i] = new LinkedList<>();
-        }
+        chainArray = new HashNode[M];
         size = 0;
     }
 
@@ -36,27 +37,33 @@ public class MyHashTable<K, V> {
 
     public void put(K key, V value) {
         int index = hash(key);
-        LinkedList<HashNode<K, V>> bucket = chainArray[index];
 
-        for (HashNode<K, V> node : bucket) {
-            if (node.key.equals(key)) {
-                node.value = value;
+        HashNode<K, V> current = chainArray[index];
+
+        while (current != null) {
+            if (current.key.equals(key)) {
+                current.value = value;
                 return;
             }
+            current = current.next;
         }
 
-        bucket.add(new HashNode<>(key, value));
+        HashNode<K, V> newNode = new HashNode<>(key, value);
+        newNode.next = chainArray[index];
+        chainArray[index] = newNode;
         size++;
     }
 
     public V get(K key) {
         int index = hash(key);
-        LinkedList<HashNode<K, V>> bucket = chainArray[index];
 
-        for (HashNode<K, V> node : bucket) {
-            if (node.key.equals(key)) {
-                return node.value;
+        HashNode<K, V> current = chainArray[index];
+
+        while (current != null) {
+            if (current.key.equals(key)) {
+                return current.value;
             }
+            current = current.next;
         }
 
         return null;
@@ -64,38 +71,56 @@ public class MyHashTable<K, V> {
 
     public V remove(K key) {
         int index = hash(key);
-        LinkedList<HashNode<K, V>> bucket = chainArray[index];
 
-        for (HashNode<K, V> node : bucket) {
-            if (node.key.equals(key)) {
-                bucket.remove(node);
+        HashNode<K, V> current = chainArray[index];
+        HashNode<K, V> previous = null;
+
+        while (current != null) {
+            if (current.key.equals(key)) {
+                if (previous == null) {
+                    chainArray[index] = current.next;
+                } else {
+                    previous.next = current.next;
+                }
+
                 size--;
-                return node.value;
+                return current.value;
             }
+
+            previous = current;
+            current = current.next;
         }
 
         return null;
     }
 
     public boolean contains(V value) {
-        for (LinkedList<HashNode<K, V>> bucket : chainArray) {
-            for (HashNode<K, V> node : bucket) {
-                if (node.value.equals(value)) {
+        for (int i = 0; i < M; i++) {
+            HashNode<K, V> current = chainArray[i];
+
+            while (current != null) {
+                if (current.value.equals(value)) {
                     return true;
                 }
+                current = current.next;
             }
         }
+
         return false;
     }
 
     public K getKey(V value) {
-        for (LinkedList<HashNode<K, V>> bucket : chainArray) {
-            for (HashNode<K, V> node : bucket) {
-                if (node.value.equals(value)) {
-                    return node.key;
+        for (int i = 0; i < M; i++) {
+            HashNode<K, V> current = chainArray[i];
+
+            while (current != null) {
+                if (current.value.equals(value)) {
+                    return current.key;
                 }
+                current = current.next;
             }
         }
+
         return null;
     }
 
@@ -103,9 +128,18 @@ public class MyHashTable<K, V> {
         return size;
     }
 
-    public void printBucketSizes() {
+    public void printTable() {
         for (int i = 0; i < M; i++) {
-            System.out.println("Bucket " + i + ": " + chainArray[i].size());
+            System.out.print(i + ": ");
+
+            HashNode<K, V> current = chainArray[i];
+
+            while (current != null) {
+                System.out.print(current + " -> ");
+                current = current.next;
+            }
+
+            System.out.println("null");
         }
     }
 }
