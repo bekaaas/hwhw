@@ -8,7 +8,7 @@ public class MyBST<K extends Comparable<K>, V> extends BST<K, V>
 
     private int size;
 
-    // Entry для key + value
+
     public static class Entry<K, V> {
         private K key;
         private V value;
